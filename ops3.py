@@ -6,13 +6,6 @@
 # Purpose:                      Monitor the status of hosts using ICMP packets
 # Execution:                    ops3.py
 
-# Python
-
-# Script Name:                  Uptime Sensor Tool - Part 2 of 2
-# Author:                       Kevin Hoang
-# Date of latest revision:      1/10/2024
-# Purpose:                      Monitor the status of hosts using ICMP packets
-# Execution:                    uptime_sensor.py
 
 # For time-related functions
 import time  
