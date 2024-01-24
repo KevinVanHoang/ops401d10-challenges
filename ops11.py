@@ -9,52 +9,51 @@
 #                               https://scapy.readthedocs.io/en/latest/introduction.html#
 #                               https://scapy.readthedocs.io/en/latest/extending.html
 
-# Import the Scapy library
-import scapy.all as scapy
+# Imports OS and scapy Library
+import os
+from scapy.all import *
 
-# Define a function to perform TCP port scanning
-def tcp_port_scanner(target_ip, port_range):
-    # Lists to store open, closed, and filtered ports
-    open_ports = []
-    closed_ports = []
-    filtered_ports = []
+# Check if the script is running with elevated privileges
+if os.geteuid() != 0:
+    print("Error: This script requires elevated privileges. Please run with sudo.")
+    exit(1)
 
-    # Loop through each port in the specified range
-    for port in port_range:
-        # Send a SYN packet to the target IP and specified port
-        response = scapy.sr1(scapy.IP(dst=target_ip) / scapy.TCP(dport=port, flags="S"), timeout=1, verbose=0)
+# This is where you will define target IP and your port range
+target_ip = "192.168.1.1"  # Replace with your target IP, this IP is an example
 
-        # Check if there is a response and if it contains TCP layer
-        if response and scapy.TCP in response:
-            # If SYN-ACK flag (0x12) received, send a RST packet to close the connection gracefully
-            if response[scapy.TCP].flags == 0x12:
-                scapy.send(scapy.IP(dst=target_ip) / scapy.TCP(dport=port, flags="R"), verbose=0)
-                open_ports.append(port)
-                print(f"Port {port} is open.")
-            # If RST flag (0x14) received, notify that the port is closed
-            elif response[scapy.TCP].flags == 0x14:
-                closed_ports.append(port)
-                print(f"Port {port} is closed.")
-            # If no flag is received, notify that the port is filtered and silently dropped
-            else:
-                filtered_ports.append(port)
-                print(f"Port {port} is filtered and silently dropped.")
+# Prompt the user to input the port range
+start_port = int(input("Enter the start port: "))
+end_port = int(input("Enter the end port: "))
 
-    # Return the lists of open, closed, and filtered ports
-    return open_ports, closed_ports, filtered_ports
+# Create a range of ports based on user input
+port_range = range(start_port, end_port + 1)
+# Loop through each port in the specified range
+for port in port_range:
+    # Craft TCP SYN packet for each porting using IP and TCP classes from scapy
+    packet = IP(dst=target_ip)/TCP(dport=port, flags="S")
 
-# Entry point of the script
-if __name__ == "__main__":
-    # Replace with the target IP and port range
-    target_ip = "127.0.0.1"
-    port_range = range(1, 1025)
+    # Send crafted packet using sr1 and receive a response. Timeout parameter set to one second and verbose to 0 to suppress output
+    response = sr1(packet, timeout=1, verbose=0)
 
-    # Call the TCP port scanner function
-    open_ports, closed_ports, filtered_ports = tcp_port_scanner(target_ip, port_range)
+    # Check the response to determine the state of the port
+    if response and response.haslayer(TCP):
+        # Check for SYN-ACK (0x12) flag using an if statement which then prints message notifying user port is open. 
+        if response[TCP].flags == 18:
+            print(f"Port {port} is open")
+            
+            # Craft and send RST packet to gracefully close the connection
+            rst_packet = IP(dst=target_ip)/TCP(dport=port, flags="R")
+            send(rst_packet, verbose=0)
+        # Check for RST (0x14) flag, which then prints a message port is closed
+        elif response[TCP].flags == 20:
+            print(f"Port {port} is closed")
+        # If no flags are recieved prints message which notifies user that port is filtered and packet is silently dropped    
+        else:
+            print(f"Port {port} is filtered and silently dropped")
+    # No reponse = Print Message notifying user that port is closed.        
+    else:
+        print(f"Port {port} is closed (no response)")
 
-    # Print the scan results
-    print("\nScan Results:")
-    print(f"Open Ports: {open_ports}")
-    print(f"Closed Ports: {closed_ports}")
-    print(f"Filtered Ports: {filtered_ports}")
+
+
 
