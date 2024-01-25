@@ -1,6 +1,6 @@
 # Python
 
-# Script Name:                  Network Security Tool with Scapy Part 1 of 3
+# Script Name:                  Network Security Tool with Scapy Part 2 of 3
 # Author:                       Kevin Hoang
 # Date of latest revision:      1/22/2024
 # Purpose:                      Script that creates a TCP Port Range Scanner that tests whether a TCP port is open or closed
