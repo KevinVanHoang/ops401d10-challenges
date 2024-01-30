@@ -1,4 +1,4 @@
-# Python
+#!/usr/bin/env python3 
 
 # Script Name:                  Network Security Tool with Scapy Part 3 of 3
 # Author:                       Kevin Hoang
