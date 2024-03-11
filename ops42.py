@@ -8,64 +8,66 @@
 
 
 import nmap
+import re
 
-# Initialize Nmap PortScanner object
-scanner = nmap.PortScanner()
+# Function to validate the IP address
+def is_valid_ip(ip):
+    pattern = re.compile(r'^(\d{1,3}\.){3}\d{1,3}$')
+    return pattern.match(ip) is not None
 
-print("Nmap Automation Tool")
-print("--------------------")
+# Function to validate the port range
+def is_valid_port_range(range):
+    pattern = re.compile(r'^\d+-\d+$')
+    return pattern.match(range) is not None
 
-# Prompt user for IP address to scan
-ip_addr = input("IP address to scan: ")
-print("The IP you entered is: ", ip_addr)
-type(ip_addr)
+# Main function
+def main():
+    scanner = nmap.PortScanner()
 
-# Prompt user to select scan type
-resp = input("""\nSelect scan to execute:
-                1) SYN ACK Scan
-                2) UDP Scan
-                3)              \n""")
-print("You have selected option: ", resp)
+    print("Nmap Automation Tool")
+    print("--------------------")
 
-# Default port range for scanning
-range = '1-50'
+    ip_addr = input("IP address to scan: ")
+    if not is_valid_ip(ip_addr):
+        print("Invalid IP address format.")
+        return
 
-# Check user's selected option and execute appropriate scan
-if resp == '1':
-    print("Nmap Version: ", scanner.nmap_version())
-    # Perform SYN ACK scan
-    scanner.scan(ip_addr, range, '-v -sS')
-    # Print scan information
-    print(scanner.scaninfo())
-    # Print IP address status
-    print("Ip Status: ", scanner[ip_addr].state())
-    # Print protocols detected
-    print(scanner[ip_addr].all_protocols())
-    # Print open TCP ports
-    print("Open Ports: ", scanner[ip_addr]['tcp'].keys())
-elif resp == '2':
-    print("Please enter a valid option") # Inform user to add missing code block
-elif resp == '3':
-    print("Please enter a valid option") # Inform user to add missing code block
-elif resp >= '4':
-    print("Please enter a valid option") # Inform user if option is out of range
+    print("The IP you entered is: ", ip_addr)
 
-# 1. Import the nmap module, which provides functionality for interacting with the Nmap security scanner.
-# 2. Initialize a PortScanner object from the nmap module to perform port scanning.
-# 3. Display introductory messages to the user.
-# 4. Prompt the user to input the IP address they want to scan.
-# 5. Print the IP address entered by the user.
-# 6. Prompt the user to select a scan type.
-# 7. Execute a specific scan based on the user's input:
-#     7.1. If the user selects option '1', perform a SYN ACK scan (-sS flag in Nmap) on the specified IP address.
-#         7.1.1. Print Nmap version.
-#         7.1.2. Perform the scan using the specified range of ports.
-#         7.1.3. Print scan information.
-#         7.1.4. Print IP address status.
-#         7.1.5. Print detected protocols.
-#         7.1.6. Print open TCP ports.
-#     7.2. If the user selects option '2', inform the user to add the missing code block for UDP scan.
-#     7.3. If the user selects option '3', inform the user to add the missing code block for the third scan type.
-#     7.4. If the user selects an option greater than or equal to '4', inform the user to enter a valid option.
+    resp = input("""\nSelect scan to execute:
+                    1) SYN ACK Scan
+                    2) UDP Scan
+                    3) Full Scan\n""")
+    if resp not in ['1', '2', '3']:
+        print("Please enter a valid option (1, 2, or 3).")
+        return
 
-# This script is intended to be completed by the user by adding functionality for options '2' and '3' as specified in the TODO comments.
+    print("You have selected option: ", resp)
+
+    port_range = input("Enter the port range (e.g., 1-100): ")
+    if not is_valid_port_range(port_range):
+        print("Invalid port range format.")
+        return
+
+    try:
+        if resp == '1':
+            scanner.scan(ip_addr, port_range, '-v -sS')
+        elif resp == '2':
+            scanner.scan(ip_addr, port_range, '-v -sU')
+        elif resp == '3':
+            scanner.scan(ip_addr, port_range, '-v -sS -sV -sC -A -O')
+
+        print(f"Nmap Version: {scanner.nmap_version()}")
+        print(scanner.scaninfo())
+        print(f"IP Status: {scanner[ip_addr].state()}")
+        open_ports = []
+        for protocol in scanner[ip_addr].all_protocols():
+            open_ports.extend(list(scanner[ip_addr][protocol].keys()))
+        print("Open Ports: ", open_ports)
+    except nmap.PortScannerError as e:
+        print(f"Scan error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+if __name__ == '__main__':
+    main()
