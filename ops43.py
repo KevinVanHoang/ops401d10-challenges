@@ -8,26 +8,29 @@
 
 import socket
 
-# Create a socket object using IPv4 address family and TCP protocol
-sockmod = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def port_scanner(host, port_range):
+    # Convert hostname to IPv4 address
+    try:
+        target_ip = socket.gethostbyname(host)
+    except socket.gaierror:
+        print("Hostname could not be resolved. Exiting")
+        return
 
-# Set a timeout value for socket operations
-timeout = # TODO: Set a timeout value here.
-sockmod.settimeout(timeout)
+    print(f"Scanning target {target_ip}")
 
-# Prompt user to input the target host IP address
-hostip = # TODO: Collect a host IP from the user.
+    for port in port_range:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            result = s.connect_ex((target_ip, port))
+            if result == 0:
+                print(f"Port {port} is open")
+            else:
+                print(f"Port {port} is closed or filtered")
+            s.close()
 
-# Prompt user to input the target port number and convert it to an integer
-portno = # TODO: Collect a port number from the user, then convert it to an integer data type.
+if __name__ == "__main__":
+    # Define your target and port range here
+    scan_target = "scanme.nmap.org"  # Change this to the host you want to scan
+    target_ports = range(22, 444)  # Define the range of ports to scan
 
-# Define a function to perform port scanning
-def portScanner(portno):
-    # Check if the specified port is open or closed
-    if sockmod.FUNCTION((hostip, portno)): # TODO: Replace "FUNCTION" with the appropriate socket.function call as found in the [socket docs](https://docs.python.org/3/library/socket.html)
-        print("Port closed")
-    else:
-        print("Port open")
-
-# Call the portScanner function with the specified port number
-portScanner(port)
+    port_scanner(scan_target, target_ports)
